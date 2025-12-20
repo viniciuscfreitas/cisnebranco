@@ -8,7 +8,7 @@ services:
     container_name: petshop-backend
     restart: unless-stopped
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
+      - "${BACKEND_PORT:-3011}:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
@@ -33,7 +33,7 @@ services:
     container_name: petshop-frontend
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-80}:80"
+      - "${FRONTEND_PORT:-8084}:80"
     depends_on:
       - backend
     networks:
