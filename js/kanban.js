@@ -366,12 +366,15 @@ function initializeSortable() {
 function handleSortableEnd(evt) {
   const { item, to, from, newIndex, oldIndex } = evt;
   
-  if (!item || !to || newIndex === undefined || newIndex === null) {
+  if (!item || !to) {
     AppState.log('Sortable: invalid event data', { item: !!item, to: !!to, newIndex });
     return;
   }
 
-  if (to === from && newIndex === oldIndex) {
+  // When dropping on empty column, newIndex might be null/undefined, use 0
+  const insertIndex = (newIndex === null || newIndex === undefined || newIndex < 0) ? 0 : newIndex;
+
+  if (to === from && insertIndex === oldIndex) {
     return;
   }
 
@@ -395,7 +398,6 @@ function handleSortableEnd(evt) {
   }
 
   const previousState = [...tasks];
-  const insertIndex = newIndex;
 
   api.moveTask(taskId, targetColId, insertIndex)
     .then((updatedTaskFromServer) => {
