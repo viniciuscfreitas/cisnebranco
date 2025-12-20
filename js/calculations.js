@@ -462,7 +462,7 @@ async function generateRecentActivities(tasks, useCache = true) {
   const activities = [];
   const currentDate = Date.now();
 
-  const tasksByStatus = { 0: [], 1: [], 2: [], 3: [] };
+  const tasksByStatus = { 0: [], 1: [], 2: [], 3: [], 4: [] };
 
   tasks.forEach(task => {
     const colId = task.col_id || 0;
