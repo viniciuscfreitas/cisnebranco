@@ -159,6 +159,10 @@ function renderDayView(tasks) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const isToday = date.getTime() === today.getTime();
+  const now = new Date();
+  const showCurrentTime = isToday && now.getDate() === date.getDate() && 
+                          now.getMonth() === date.getMonth() && 
+                          now.getFullYear() === date.getFullYear();
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -184,14 +188,37 @@ function renderDayView(tasks) {
     </div>
     <div class="calendar-day-view ${isToday ? 'today' : ''}">
       <div class="calendar-day-hours">
-        ${hours.map(hour => `
+        ${hours.map(hour => {
+          const period = hour >= 12 ? 'PM' : 'AM';
+          const displayHour = hour % 12 || 12;
+          const hourLabel = `${displayHour} ${period}`;
+          return `
           <div class="calendar-hour-row">
-            <div class="calendar-hour-label">${hour.toString().padStart(2, '0')}:00</div>
-            <div class="calendar-hour-slot" data-hour="${hour}"></div>
+            <div class="calendar-hour-label">${hourLabel}</div>
+            <div class="calendar-hour-slot-container">
+              <div class="calendar-30min-slot" 
+                   data-hour="${hour}" 
+                   data-minute="0"
+                   role="button" 
+                   tabindex="0"
+                   aria-label="Criar agendamento às ${hourLabel}"></div>
+              <div class="calendar-30min-slot" 
+                   data-hour="${hour}" 
+                   data-minute="30"
+                   role="button" 
+                   tabindex="0"
+                   aria-label="Criar agendamento às ${displayHour}:30 ${period}"></div>
+            </div>
           </div>
-        `).join('')}
+        `;
+        }).join('')}
       </div>
       <div class="calendar-day-events-container">
+        ${showCurrentTime ? `
+          <div class="calendar-current-time-line" style="top: ${(now.getHours() * 60 + now.getMinutes()) * (100 / (24 * 60))}%;">
+            <div class="calendar-current-time-dot"></div>
+          </div>
+        ` : ''}
         ${dayTasks.map(task => {
           const taskDate = parseDeadlineToDate(task.deadline, task.deadline_timestamp);
           const hour = taskDate ? taskDate.getHours() : 0;
@@ -201,8 +228,10 @@ function renderDayView(tasks) {
           return `
             <div class="calendar-day-event" 
                  data-task-id="${task.id}"
-                 style="top: ${top}%; height: ${duration * (100 / (24 * 60))}%;"
-                 role="button" tabindex="0">
+                 style="top: ${top}%; height: ${Math.max(duration * (100 / (24 * 60)), 4.17)}%;"
+                 role="button" 
+                 tabindex="0"
+                 aria-label="Agendamento: ${escapeHtml(task.pet_name || task.client)} às ${formatTime(taskDate)}">
               <div class="calendar-day-event-time">${formatTime(taskDate)}</div>
               <div class="calendar-day-event-title">${escapeHtml(task.pet_name || task.client)}</div>
               <div class="calendar-day-event-subtitle">${escapeHtml(task.client)}</div>
@@ -225,6 +254,7 @@ function renderWeekView(tasks) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const hours = Array.from({ length: 24 }, (_, i) => i);
+  const now = new Date();
 
   const weekDates = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekStart);
@@ -266,20 +296,48 @@ function renderWeekView(tasks) {
       </div>
       <div class="calendar-week-body">
         <div class="calendar-week-hours">
-          ${hours.map(hour => `
+          ${hours.map(hour => {
+            const period = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            const hourLabel = `${displayHour} ${period}`;
+            return `
             <div class="calendar-hour-row">
-              <div class="calendar-hour-label">${hour.toString().padStart(2, '0')}:00</div>
+              <div class="calendar-hour-label">${hourLabel}</div>
             </div>
-          `).join('')}
+          `;
+          }).join('')}
         </div>
         ${weekDates.map((date, dayIdx) => {
           const dayTasks = getTasksForDate(weekTasks, date);
           const isToday = date.getTime() === today.getTime();
+          const showCurrentTime = isToday && now.getDate() === date.getDate() && 
+                                  now.getMonth() === date.getMonth() && 
+                                  now.getFullYear() === date.getFullYear();
           return `
             <div class="calendar-week-day-column ${isToday ? 'today' : ''}" data-date="${date.toISOString().split('T')[0]}">
               ${hours.map(hour => `
-                <div class="calendar-hour-slot" data-hour="${hour}" data-day="${dayIdx}"></div>
+                <div class="calendar-hour-slot-container">
+                  <div class="calendar-30min-slot" 
+                       data-hour="${hour}" 
+                       data-minute="0" 
+                       data-day="${dayIdx}"
+                       role="button" 
+                       tabindex="0"
+                       aria-label="Criar agendamento às ${hour.toString().padStart(2, '0')}:00"></div>
+                  <div class="calendar-30min-slot" 
+                       data-hour="${hour}" 
+                       data-minute="30" 
+                       data-day="${dayIdx}"
+                       role="button" 
+                       tabindex="0"
+                       aria-label="Criar agendamento às ${hour.toString().padStart(2, '0')}:30"></div>
+                </div>
               `).join('')}
+              ${showCurrentTime ? `
+                <div class="calendar-current-time-line" style="top: ${(now.getHours() * 60 + now.getMinutes()) * (100 / (24 * 60))}%;">
+                  <div class="calendar-current-time-dot"></div>
+                </div>
+              ` : ''}
               ${dayTasks.map(task => {
                 const taskDate = parseDeadlineToDate(task.deadline, task.deadline_timestamp);
                 const hour = taskDate ? taskDate.getHours() : 0;
@@ -289,8 +347,10 @@ function renderWeekView(tasks) {
                 return `
                   <div class="calendar-week-event" 
                        data-task-id="${task.id}"
-                       style="top: ${top}%; height: ${duration * (100 / (24 * 60))}%;"
-                       role="button" tabindex="0">
+                       style="top: ${top}%; height: ${Math.max(duration * (100 / (24 * 60)), 4.17)}%;"
+                       role="button" 
+                       tabindex="0"
+                       aria-label="Agendamento: ${escapeHtml(task.pet_name || task.client)} às ${formatTime(taskDate)}">
                     <div class="calendar-week-event-time">${formatTime(taskDate)}</div>
                     <div class="calendar-week-event-title">${escapeHtml(task.pet_name || task.client)}</div>
                   </div>
@@ -366,7 +426,11 @@ function renderMonthView(tasks) {
       const taskDate = parseDeadlineToDate(task.deadline, task.deadline_timestamp);
       const timeStr = taskDate ? formatTime(taskDate) : '';
       html += `
-        <div class="calendar-event" data-task-id="${task.id}" role="button" tabindex="0">
+        <div class="calendar-event" 
+             data-task-id="${task.id}" 
+             role="button" 
+             tabindex="0"
+             aria-label="Agendamento: ${escapeHtml(task.pet_name || task.client)}${timeStr ? ' às ' + timeStr : ''}">
           <span class="calendar-event-time">${timeStr}</span>
           <span class="calendar-event-title">${escapeHtml(task.pet_name || task.client)}</span>
         </div>
@@ -464,10 +528,19 @@ function formatTime(date) {
   if (!date) return '';
   const hours = date.getHours();
   const minutes = date.getMinutes();
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  
   if (minutes === 0) {
-    return `${hours}h`;
+    return `${displayHours} ${period}`;
   }
-  return `${hours}:${minutes.toString().padStart(2, '0')}`;
+  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+function formatHourLabel(hour) {
+  const period = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour} ${period}`;
 }
 
 function navigateCalendar(direction) {
@@ -557,6 +630,80 @@ function setupCalendarEventListeners(tasks) {
           };
           openModal(newTask);
         }
+      }
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (e.target.closest('[data-task-id]')) return;
+        const dateStr = el.dataset.date;
+        if (dateStr) {
+          const date = new Date(dateStr);
+          if (calendarViewMode === 'year') {
+            calendarViewMode = 'month';
+            currentCalendarDate = date;
+            renderAgendamentos();
+            renderAgendamentosHeader();
+          } else {
+            const newTask = {
+              deadline: formatDateForForm(date),
+              deadline_timestamp: date.getTime()
+            };
+            openModal(newTask);
+          }
+        }
+      }
+    });
+  });
+
+  const minuteSlots = DOM.agendamentosContainer.querySelectorAll('.calendar-30min-slot[data-hour]');
+  minuteSlots.forEach(slot => {
+    slot.onclick = null;
+    slot.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const hour = parseInt(slot.dataset.hour, 10);
+      const minute = parseInt(slot.dataset.minute || 0, 10);
+      const dayIdx = slot.dataset.day;
+      
+      let date;
+      if (dayIdx !== undefined) {
+        const weekStart = getWeekStart(currentCalendarDate);
+        date = new Date(weekStart);
+        date.setDate(date.getDate() + parseInt(dayIdx, 10));
+      } else {
+        date = new Date(currentCalendarDate);
+      }
+      
+      date.setHours(hour, minute, 0, 0);
+      const newTask = {
+        deadline: formatDateForForm(date),
+        deadline_timestamp: date.getTime()
+      };
+      openModal(newTask);
+    });
+    slot.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        e.stopPropagation();
+        const hour = parseInt(slot.dataset.hour, 10);
+        const minute = parseInt(slot.dataset.minute || 0, 10);
+        const dayIdx = slot.dataset.day;
+        
+        let date;
+        if (dayIdx !== undefined) {
+          const weekStart = getWeekStart(currentCalendarDate);
+          date = new Date(weekStart);
+          date.setDate(date.getDate() + parseInt(dayIdx, 10));
+        } else {
+          date = new Date(currentCalendarDate);
+        }
+        
+        date.setHours(hour, minute, 0, 0);
+        const newTask = {
+          deadline: formatDateForForm(date),
+          deadline_timestamp: date.getTime()
+        };
+        openModal(newTask);
       }
     });
   });
