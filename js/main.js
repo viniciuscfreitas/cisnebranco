@@ -464,14 +464,29 @@ function handleSearch() {
     return; // Financial view handled the search
   }
 
-  // Default Kanban search
   const settings = getSettings();
   if (AppState.searchTimeout) {
     clearTimeout(AppState.searchTimeout);
   }
   AppState.searchTimeout = setTimeout(() => {
-    renderBoard();
-    updateHeaderStats();
+    const isAgendamentos = DOM.agendamentosContainer && !DOM.agendamentosContainer.classList.contains('hidden');
+    const isArrivals = !DOM.boardContainer.classList.contains('hidden');
+    const isDashboard = DOM.dashboardContainer.classList.contains('active');
+    const isFinancial = DOM.financialContainer.classList.contains('active');
+
+    if (isAgendamentos) {
+      renderAgendamentos();
+      renderAgendamentosHeader();
+    } else if (isArrivals) {
+      renderBoard();
+      renderArrivalsHeader();
+    } else if (isDashboard) {
+      renderDashboard();
+      updateHeaderStats();
+    } else if (isFinancial) {
+      renderFinancial();
+      updateHeaderStats();
+    }
     AppState.log('Search executed');
   }, settings.searchDebounce);
 }
@@ -884,6 +899,7 @@ function updateHeader(view) {
     // Placeholder is set by renderFinancial() in financial.js
   } else if (view === 'agendamentos') {
     renderAgendamentosHeader();
+    renderAgendamentos();
     if (DOM.btnNewProject) DOM.btnNewProject.style.display = 'flex';
     if (DOM.searchContainer) DOM.searchContainer.style.display = 'flex';
     if (DOM.searchInput) {
