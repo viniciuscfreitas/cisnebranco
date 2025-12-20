@@ -381,7 +381,7 @@ function handleSortableEnd(evt) {
   }
 
   const targetColId = parseInt(to.dataset.colId);
-  if (isNaN(targetColId) || targetColId < 0 || targetColId > 3) {
+  if (isNaN(targetColId) || targetColId < 0 || targetColId > 4) {
     NotificationManager.error('Coluna inválida');
     return;
   }
@@ -431,7 +431,7 @@ function handleKeyboardMove(e, task, cardElement) {
 
   if (e.key === 'ArrowLeft' && currentColId > 0) {
     newColId = currentColId - 1;
-  } else if (e.key === 'ArrowRight' && currentColId < 3) {
+  } else if (e.key === 'ArrowRight' && currentColId < 4) {
     newColId = currentColId + 1;
   } else {
     return; // Cannot move in this direction
