@@ -344,10 +344,11 @@ function initializeSortable() {
       dragClass: 'sortable-drag',
       chosenClass: 'sortable-chosen',
       handle: '.card',
-      filter: '.empty-state',
+      filter: '.empty-state, .empty-state-action',
       forceFallback: false,
       fallbackOnBody: true,
       swapThreshold: 0.65,
+      emptyInsertThreshold: 50,
       onAdd: function(evt) {
         const emptyState = evt.to.querySelector('.empty-state');
         if (emptyState) {
