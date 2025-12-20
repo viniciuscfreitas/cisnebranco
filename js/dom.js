@@ -107,14 +107,12 @@ const DOM = {
     this.formPetName = document.getElementById('formPetName');
     this.formContact = document.getElementById('formContact');
     this.formType = document.getElementById('formType');
-    this.formStack = document.getElementById('formStack');
-    this.formDomain = document.getElementById('formDomain');
+    // formStack and formDomain removed - not applicable for pet shop
     this.formDesc = document.getElementById('formDesc');
     this.formPrice = document.getElementById('formPrice');
     this.formPayment = document.getElementById('formPayment');
     this.formDeadline = document.getElementById('formDeadline');
-    this.formHosting = document.getElementById('formHosting');
-    this.formRecurring = document.getElementById('formRecurring');
+    // formHosting and formRecurring removed - not applicable for pet shop
     this.formPublic = document.getElementById('formPublic');
     this.formAssetsLink = document.getElementById('formAssetsLink');
     this.errorClient = document.getElementById('errorClient');

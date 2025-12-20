@@ -1322,10 +1322,10 @@ function setupEventListeners() {
     });
   }
 
-  DOM.formClient.addEventListener('input', () => clearFormError('client'));
-  DOM.formContact.addEventListener('input', () => clearFormError('contact'));
-  DOM.formDomain.addEventListener('input', () => clearFormError('domain'));
-  DOM.formPrice.addEventListener('input', () => clearFormError('price'));
+  if (DOM.formClient) DOM.formClient.addEventListener('input', () => clearFormError('client'));
+  if (DOM.formContact) DOM.formContact.addEventListener('input', () => clearFormError('contact'));
+  if (DOM.formPetName) DOM.formPetName.addEventListener('input', () => clearFormError('petName'));
+  if (DOM.formPrice) DOM.formPrice.addEventListener('input', () => clearFormError('price'));
 
   // Setup paste handler for magic paste feature
   if (typeof window.setupPasteHandler === 'function') {
