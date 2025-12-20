@@ -44,19 +44,22 @@ function getViewFromUrl(path = null) {
   if (currentPath === '/financeiro' || currentPath.endsWith('/financeiro')) {
     return 'financial';
   }
+  if (currentPath === '/agendamentos' || currentPath.endsWith('/agendamentos')) {
+    return 'agendamentos';
+  }
   if (currentPath === '/projetos/novo' || currentPath.endsWith('/projetos/novo')) {
-    return 'projects';
+    return 'arrivals';
   }
   if (getTaskIdFromUrl(currentPath)) {
-    return 'projects';
+    return 'arrivals';
   }
   if (currentPath === '/projetos' || currentPath.endsWith('/projetos')) {
-    return 'projects';
+    return 'arrivals';
   }
   if (currentPath === '/' || currentPath === '') {
-    return 'projects';
+    return 'arrivals';
   }
-  return 'projects';
+  return 'arrivals';
 }
 
 function updateUrl(view, currentPath = null) {
@@ -69,7 +72,9 @@ function updateUrl(view, currentPath = null) {
     newPath = '/dashboard';
   } else if (view === 'financial') {
     newPath = '/financeiro';
-  } else if (view === 'projects') {
+  } else if (view === 'agendamentos') {
+    newPath = '/agendamentos';
+  } else if (view === 'arrivals' || view === 'projects') {
     const taskId = getTaskIdFromUrl(path);
     const isNew = isNewProjectUrl(path);
     if (taskId !== null && taskId !== undefined) {
@@ -488,12 +493,14 @@ function fadeContainer(container, isFadeIn) {
 function switchToDashboard() {
   fadeContainer(DOM.boardContainer, false);
   fadeContainer(DOM.financialContainer, false);
+  fadeContainer(DOM.agendamentosContainer, false);
 
   setTimeout(() => {
     DOM.boardContainer.classList.add('hidden');
     DOM.financialContainer.classList.add('hidden');
     DOM.financialContainer.classList.remove('active');
     DOM.financialContainer.style.display = '';
+    DOM.agendamentosContainer.classList.add('hidden');
     DOM.dashboardContainer.classList.add('active');
     DOM.dashboardContainer.classList.remove('hidden');
 
@@ -504,9 +511,30 @@ function switchToDashboard() {
   }, 150);
 }
 
-function switchToProjects() {
+function switchToAgendamentos() {
+  fadeContainer(DOM.boardContainer, false);
   fadeContainer(DOM.dashboardContainer, false);
   fadeContainer(DOM.financialContainer, false);
+
+  setTimeout(() => {
+    DOM.boardContainer.classList.add('hidden');
+    DOM.dashboardContainer.classList.remove('active');
+    DOM.dashboardContainer.classList.add('hidden');
+    DOM.financialContainer.classList.add('hidden');
+    DOM.financialContainer.classList.remove('active');
+    DOM.financialContainer.style.display = '';
+    DOM.agendamentosContainer.classList.remove('hidden');
+
+    fadeContainer(DOM.agendamentosContainer, true);
+    updateHeader('agendamentos');
+    renderAgendamentos();
+  }, 150);
+}
+
+function switchToArrivals() {
+  fadeContainer(DOM.dashboardContainer, false);
+  fadeContainer(DOM.financialContainer, false);
+  fadeContainer(DOM.agendamentosContainer, false);
 
   setTimeout(() => {
     DOM.dashboardContainer.classList.remove('active');
@@ -514,22 +542,29 @@ function switchToProjects() {
     DOM.financialContainer.classList.add('hidden');
     DOM.financialContainer.classList.remove('active');
     DOM.financialContainer.style.display = '';
+    DOM.agendamentosContainer.classList.add('hidden');
     DOM.boardContainer.classList.remove('hidden');
 
     fadeContainer(DOM.boardContainer, true);
-    updateHeader('projects');
+    updateHeader('arrivals');
     renderBoard();
   }, 150);
+}
+
+function switchToProjects() {
+  switchToArrivals();
 }
 
 function switchToFinancial() {
   fadeContainer(DOM.boardContainer, false);
   fadeContainer(DOM.dashboardContainer, false);
+  fadeContainer(DOM.agendamentosContainer, false);
 
   setTimeout(() => {
     DOM.boardContainer.classList.add('hidden');
     DOM.dashboardContainer.classList.remove('active');
     DOM.dashboardContainer.classList.add('hidden');
+    DOM.agendamentosContainer.classList.add('hidden');
     DOM.financialContainer.classList.remove('hidden');
     DOM.financialContainer.classList.add('active');
 
@@ -544,7 +579,7 @@ function updateBottomNavCentralButton(view) {
   const centralBtn = DOM.bottomNavCentral;
   if (!centralBtn) return;
 
-  const shouldShow = view === 'projects';
+  const shouldShow = view === 'agendamentos' || view === 'arrivals' || view === 'projects';
   const isCurrentlyVisible = centralBtn.style.display !== 'none';
   const currentView = centralBtn._currentView;
 
@@ -582,21 +617,34 @@ function updateBottomNavCentralButton(view) {
   centralBtn._currentView = view;
 }
 
-function updateNavButtons(isProjects, isDashboard, isFinancial) {
-  if (!DOM.navButtons || DOM.navButtons.length < 3) return;
+function updateNavButtons(isAgendamentos, isArrivals, isDashboard, isFinancial) {
+  if (!DOM.navButtons || DOM.navButtons.length < 4) return;
 
-  const projectsBtn = DOM.navButtons[0];
-  const dashboardBtn = DOM.navButtons[1];
-  const financialBtn = DOM.navButtons[2];
+  const agendamentosBtn = DOM.navButtons[0];
+  const arrivalsBtn = DOM.navButtons[1];
+  const dashboardBtn = DOM.navButtons[2];
+  const financialBtn = DOM.navButtons[3];
 
-  if (projectsBtn) {
-    const isActive = projectsBtn.classList.contains('active');
-    if (isProjects !== isActive) {
-      projectsBtn.classList.toggle('active', isProjects);
-      if (isProjects) {
-        projectsBtn.setAttribute('aria-current', 'page');
+  if (agendamentosBtn) {
+    const isActive = agendamentosBtn.classList.contains('active');
+    if (isAgendamentos !== isActive) {
+      agendamentosBtn.classList.toggle('active', isAgendamentos);
+      if (isAgendamentos) {
+        agendamentosBtn.setAttribute('aria-current', 'page');
       } else {
-        projectsBtn.removeAttribute('aria-current');
+        agendamentosBtn.removeAttribute('aria-current');
+      }
+    }
+  }
+
+  if (arrivalsBtn) {
+    const isActive = arrivalsBtn.classList.contains('active');
+    if (isArrivals !== isActive) {
+      arrivalsBtn.classList.toggle('active', isArrivals);
+      if (isArrivals) {
+        arrivalsBtn.setAttribute('aria-current', 'page');
+      } else {
+        arrivalsBtn.removeAttribute('aria-current');
       }
     }
   }
@@ -625,18 +673,31 @@ function updateNavButtons(isProjects, isDashboard, isFinancial) {
     }
   }
 
-  const bottomProjectsBtn = DOM.bottomNavProjects;
+  const bottomAgendamentosBtn = DOM.bottomNavAgendamentos;
+  const bottomArrivalsBtn = DOM.bottomNavArrivals;
   const bottomDashboardBtn = DOM.bottomNavDashboard;
   const bottomFinancialBtn = DOM.bottomNavFinancial;
 
-  if (bottomProjectsBtn) {
-    const isActive = bottomProjectsBtn.classList.contains('active');
-    if (isProjects !== isActive) {
-      bottomProjectsBtn.classList.toggle('active', isProjects);
-      if (isProjects) {
-        bottomProjectsBtn.setAttribute('aria-current', 'page');
+  if (bottomAgendamentosBtn) {
+    const isActive = bottomAgendamentosBtn.classList.contains('active');
+    if (isAgendamentos !== isActive) {
+      bottomAgendamentosBtn.classList.toggle('active', isAgendamentos);
+      if (isAgendamentos) {
+        bottomAgendamentosBtn.setAttribute('aria-current', 'page');
       } else {
-        bottomProjectsBtn.removeAttribute('aria-current');
+        bottomAgendamentosBtn.removeAttribute('aria-current');
+      }
+    }
+  }
+
+  if (bottomArrivalsBtn) {
+    const isActive = bottomArrivalsBtn.classList.contains('active');
+    if (isArrivals !== isActive) {
+      bottomArrivalsBtn.classList.toggle('active', isArrivals);
+      if (isArrivals) {
+        bottomArrivalsBtn.setAttribute('aria-current', 'page');
+      } else {
+        bottomArrivalsBtn.removeAttribute('aria-current');
       }
     }
   }
@@ -667,13 +728,15 @@ function updateNavButtons(isProjects, isDashboard, isFinancial) {
 }
 
 function updateAriaHiddenForViews() {
-  if (!DOM.boardContainer || !DOM.dashboardContainer || !DOM.financialContainer) return;
+  if (!DOM.boardContainer || !DOM.dashboardContainer || !DOM.financialContainer || !DOM.agendamentosContainer) return;
 
   const isBoardVisible = !DOM.boardContainer.classList.contains('hidden');
+  const isAgendamentosVisible = !DOM.agendamentosContainer.classList.contains('hidden');
   const isDashboardVisible = DOM.dashboardContainer.classList.contains('active');
   const isFinancialVisible = DOM.financialContainer.classList.contains('active');
 
   DOM.boardContainer.setAttribute('aria-hidden', isBoardVisible ? 'false' : 'true');
+  DOM.agendamentosContainer.setAttribute('aria-hidden', isAgendamentosVisible ? 'false' : 'true');
   DOM.dashboardContainer.setAttribute('aria-hidden', isDashboardVisible ? 'false' : 'true');
   DOM.financialContainer.setAttribute('aria-hidden', isFinancialVisible ? 'false' : 'true');
 }
@@ -693,31 +756,37 @@ function announceToScreenReader(message) {
 // Determine current and target view states
 function determineViewState(view) {
   const isDashboard = view === 'dashboard';
-  const isProjects = view === 'projects';
+  const isAgendamentos = view === 'agendamentos';
+  const isArrivals = view === 'arrivals' || view === 'projects';
   const isFinancial = view === 'financial';
 
   const currentIsDashboard = DOM.dashboardContainer.classList.contains('active');
-  const currentIsProjects = !DOM.boardContainer.classList.contains('hidden');
+  const currentIsAgendamentos = DOM.agendamentosContainer && !DOM.agendamentosContainer.classList.contains('hidden');
+  const currentIsArrivals = !DOM.boardContainer.classList.contains('hidden');
   const currentIsFinancial = DOM.financialContainer.classList.contains('active');
 
   return {
     isDashboard,
-    isProjects,
+    isAgendamentos,
+    isArrivals,
     isFinancial,
     currentIsDashboard,
-    currentIsProjects,
+    currentIsAgendamentos,
+    currentIsArrivals,
     currentIsFinancial,
     isSwitchingToDashboard: isDashboard && !currentIsDashboard,
-    isSwitchingToProjects: isProjects && !currentIsProjects,
+    isSwitchingToAgendamentos: isAgendamentos && !currentIsAgendamentos,
+    isSwitchingToArrivals: isArrivals && !currentIsArrivals,
     isSwitchingToFinancial: isFinancial && !currentIsFinancial
   };
 }
 
 // Update view visibility without animation
 function updateViewVisibility(state) {
-  DOM.boardContainer.classList.toggle('hidden', state.isDashboard || state.isFinancial);
+  DOM.boardContainer.classList.toggle('hidden', state.isDashboard || state.isFinancial || state.isAgendamentos);
+  DOM.agendamentosContainer.classList.toggle('hidden', state.isDashboard || state.isFinancial || state.isArrivals);
   DOM.dashboardContainer.classList.toggle('active', state.isDashboard);
-  DOM.dashboardContainer.classList.toggle('hidden', state.isProjects || state.isFinancial);
+  DOM.dashboardContainer.classList.toggle('hidden', state.isArrivals || state.isFinancial || state.isAgendamentos);
 
   if (state.isFinancial) {
     DOM.financialContainer.classList.remove('hidden');
@@ -728,8 +797,12 @@ function updateViewVisibility(state) {
     DOM.financialContainer.classList.add('hidden');
   }
 
-  if (state.isProjects) {
+  if (state.isArrivals) {
     fadeContainer(DOM.boardContainer, true);
+  }
+
+  if (state.isAgendamentos) {
+    fadeContainer(DOM.agendamentosContainer, true);
   }
 }
 
@@ -744,18 +817,20 @@ function updateViewContent(state) {
     resetFinancialRenderState();
     renderFinancial();
     updateHeader('financial');
-  } else {
-    const view = state.isDashboard ? 'dashboard' : state.isProjects ? 'projects' : 'financial';
-    updateHeader(view);
-  }
-
-  if (state.isProjects) {
+  } else if (state.isAgendamentos) {
+    renderAgendamentos();
+    updateHeader('agendamentos');
+  } else if (state.isArrivals) {
     renderBoard();
+    updateHeader('arrivals');
+  } else {
+    const view = state.isDashboard ? 'dashboard' : 'arrivals';
+    updateHeader(view);
   }
 }
 
 function switchView(view, currentPath = null) {
-  if (!DOM.boardContainer || !DOM.dashboardContainer || !DOM.financialContainer) return;
+  if (!DOM.boardContainer || !DOM.dashboardContainer || !DOM.financialContainer || !DOM.agendamentosContainer) return;
   if (view === 'login') return;
 
   const state = determineViewState(view);
@@ -764,8 +839,10 @@ function switchView(view, currentPath = null) {
   // Handle animated transitions for major view changes
   if (state.isSwitchingToDashboard) {
     switchToDashboard();
-  } else if (state.isSwitchingToProjects) {
-    switchToProjects();
+  } else if (state.isSwitchingToAgendamentos) {
+    switchToAgendamentos();
+  } else if (state.isSwitchingToArrivals) {
+    switchToArrivals();
   } else if (state.isSwitchingToFinancial) {
     switchToFinancial();
   } else {
@@ -774,7 +851,7 @@ function switchView(view, currentPath = null) {
     updateViewContent(state);
   }
 
-  updateNavButtons(state.isProjects, state.isDashboard, state.isFinancial);
+  updateNavButtons(state.isAgendamentos, state.isArrivals, state.isDashboard, state.isFinancial);
   updateAriaHiddenForViews();
   updateUrl(view, path);
   updateBottomNavCentralButton(view);
@@ -782,8 +859,10 @@ function switchView(view, currentPath = null) {
   // Announce view change to screen readers
   if (state.isDashboard) {
     announceToScreenReader('Visualização alterada para Painel de controle');
-  } else if (state.isProjects) {
-    announceToScreenReader('Visualização alterada para Projetos');
+  } else if (state.isAgendamentos) {
+    announceToScreenReader('Visualização alterada para Agendamentos');
+  } else if (state.isArrivals) {
+    announceToScreenReader('Visualização alterada para Controle de Chegada');
   } else if (state.isFinancial) {
     announceToScreenReader('Visualização alterada para Financeiro');
   }
@@ -803,14 +882,22 @@ function updateHeader(view) {
     if (DOM.searchContainer) DOM.searchContainer.style.display = 'flex';
     updateBottomNavCentralButton('financial');
     // Placeholder is set by renderFinancial() in financial.js
-  } else {
-    renderProjectsHeader();
+  } else if (view === 'agendamentos') {
+    renderAgendamentosHeader();
     if (DOM.btnNewProject) DOM.btnNewProject.style.display = 'flex';
     if (DOM.searchContainer) DOM.searchContainer.style.display = 'flex';
     if (DOM.searchInput) {
-      DOM.searchInput.placeholder = 'Buscar projeto... (/)';
+      DOM.searchInput.placeholder = 'Buscar agendamento... (/)';
     }
-    updateBottomNavCentralButton('projects');
+    updateBottomNavCentralButton('agendamentos');
+  } else {
+    renderArrivalsHeader();
+    if (DOM.btnNewProject) DOM.btnNewProject.style.display = 'flex';
+    if (DOM.searchContainer) DOM.searchContainer.style.display = 'flex';
+    if (DOM.searchInput) {
+      DOM.searchInput.placeholder = 'Buscar chegada... (/)';
+    }
+    updateBottomNavCentralButton('arrivals');
   }
 }
 
@@ -865,16 +952,21 @@ const handleModalOverlayClick = (e) => {
 };
 
 function setupEventListeners() {
-  DOM.navButtons.forEach((btn, index) => {
-    btn.addEventListener('click', () => {
-      if (index === 0) {
-        switchView('projects');
-      } else if (index === 1) {
-        switchView('dashboard');
-      } else if (index === 2) {
-        switchView('financial');
+  DOM.navButtons.forEach((btn) => {
+    const view = btn.getAttribute('data-view');
+    if (view) {
+      const oldHandler = btn._clickHandler;
+      if (oldHandler) {
+        btn.removeEventListener('click', oldHandler);
       }
-    });
+      const clickHandler = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        switchView(view);
+      };
+      btn.addEventListener('click', clickHandler);
+      btn._clickHandler = clickHandler;
+    }
   });
 
   if (DOM.bottomNavItems && DOM.bottomNavItems.length > 0) {
@@ -1075,10 +1167,13 @@ function setupEventListeners() {
     exportBtn.addEventListener('click', () => {
       const isDashboard = DOM.dashboardContainer.classList.contains('active');
       const isFinancial = DOM.financialContainer.classList.contains('active');
+      const isAgendamentos = DOM.agendamentosContainer && !DOM.agendamentosContainer.classList.contains('hidden');
       if (isDashboard) {
         exportDashboardData();
       } else if (isFinancial) {
         exportFinancialData();
+      } else if (isAgendamentos) {
+        exportAgendamentosData();
       } else {
         exportKanbanData();
       }

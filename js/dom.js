@@ -2,6 +2,7 @@
 const DOM = {
   boardGrid: null,
   boardContainer: null,
+  agendamentosContainer: null,
   dashboardContainer: null,
   financialContainer: null,
   searchContainer: null,
@@ -94,6 +95,7 @@ const DOM = {
   init() {
     this.boardGrid = document.getElementById('boardGrid');
     this.boardContainer = document.getElementById('boardContainer');
+    this.agendamentosContainer = document.getElementById('agendamentosContainer');
     this.dashboardContainer = document.getElementById('dashboardContainer');
     this.financialContainer = document.getElementById('financialContainer');
     this.searchContainer = document.getElementById('searchContainer');
@@ -158,7 +160,8 @@ const DOM = {
     this.bottomNavItems = document.querySelectorAll('.bottom-nav-item[data-view]');
     this.bottomNavCentral = document.getElementById('bottomNavCentral');
     this.bottomNavProfile = document.getElementById('bottomNavProfile');
-    this.bottomNavProjects = document.getElementById('bottomNavProjects');
+    this.bottomNavAgendamentos = document.getElementById('bottomNavAgendamentos');
+    this.bottomNavArrivals = document.getElementById('bottomNavArrivals');
     this.bottomNavDashboard = document.getElementById('bottomNavDashboard');
     this.bottomNavFinancial = document.getElementById('bottomNavFinancial');
     this.bottomNavAvatar = document.getElementById('bottomNavAvatar');

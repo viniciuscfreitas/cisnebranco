@@ -95,16 +95,16 @@ function renderBoard() {
     const colDiv = document.createElement('div');
     colDiv.className = 'column';
     colDiv.setAttribute('role', 'region');
-    colDiv.setAttribute('aria-label', `Coluna ${col.name} com ${colTasks.length} ${colTasks.length === 1 ? 'agendamento' : 'agendamentos'}`);
+    colDiv.setAttribute('aria-label', `Coluna ${col.name} com ${colTasks.length} ${colTasks.length === 1 ? 'chegada' : 'chegadas'}`);
     if (hasAnyFilter) {
       colDiv.classList.add('column-expanded');
     }
     colDiv.innerHTML = `
       <div class="col-header">
         <h2 class="col-title">${escapeHtml(col.name)}</h2>
-        <span class="col-count ${colTasks.length > 0 ? 'col-count-active' : ''}" aria-label="${colTasks.length} ${colTasks.length === 1 ? 'agendamento' : 'agendamentos'}">${colTasks.length}</span>
+        <span class="col-count ${colTasks.length > 0 ? 'col-count-active' : ''}" aria-label="${colTasks.length} ${colTasks.length === 1 ? 'chegada' : 'chegadas'}">${colTasks.length}</span>
       </div>
-      <div class="col-body" data-col-id="${col.id}" role="group" aria-label="Agendamentos em ${escapeHtml(col.name)}">
+      <div class="col-body" data-col-id="${col.id}" role="group" aria-label="Chegadas em ${escapeHtml(col.name)}">
       </div>
     `;
 
@@ -115,8 +115,8 @@ function renderBoard() {
       emptyState.className = 'empty-state';
       emptyState.innerHTML = `
         <div class="empty-state-icon"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></div>
-        <div class="empty-state-text">Nenhum agendamento aqui</div>
-        ${col.id === 0 ? '<button class="btn-text empty-state-action" id="emptyStateCreateBtn">Criar primeiro agendamento</button>' : ''}
+        <div class="empty-state-text">Nenhuma chegada aqui</div>
+        ${col.id === 0 ? '<button class="btn-text empty-state-action" id="emptyStateCreateBtn">Registrar primeira chegada</button>' : ''}
       `;
       bodyDiv.appendChild(emptyState);
 
@@ -165,7 +165,7 @@ function buildActionButtonsHtml(task) {
     const phoneMatch = contact.replace(/\D/g, '');
     if (phoneMatch.length >= 10) {
       const colName = COLUMNS_MAP.get(task.col_id)?.name || 'em andamento';
-      const message = `Olá! Segue o status do agendamento ${task.pet_name || task.client}: ${colName}.`;
+      const message = `Olá! Segue o status da chegada ${task.pet_name || task.client}: ${colName}.`;
       const whatsappUrl = `https://wa.me/${phoneMatch}?text=${encodeURIComponent(message)}`;
       whatsappHtml = `<a href="${whatsappUrl}" class="action-btn whatsapp" target="_blank" aria-label="Abrir WhatsApp" onclick="event.stopPropagation();">WhatsApp</a>`;
     }
@@ -174,7 +174,7 @@ function buildActionButtonsHtml(task) {
   // Validar e extrair email usando EMAIL_PATTERN de forms.js
   const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (EMAIL_PATTERN.test(contact)) {
-    const emailUrl = `mailto:${contact}?subject=${encodeURIComponent(`Status do Agendamento ${task.pet_name || task.client}`)}`;
+    const emailUrl = `mailto:${contact}?subject=${encodeURIComponent(`Status da Chegada ${task.pet_name || task.client}`)}`;
     emailHtml = `<a href="${emailUrl}" class="action-btn email" aria-label="Enviar email" onclick="event.stopPropagation();">Email</a>`;
   }
 
@@ -196,7 +196,7 @@ function createCardElement(task, isExpanded = false, now = null) {
   el.setAttribute('tabindex', '0');
   const deadlineInfo = task.deadline ? `, prazo: ${task.deadline}` : '';
   const colName = COLUMNS_MAP.get(task.col_id)?.name || '';
-  el.setAttribute('aria-label', `Agendamento ${task.pet_name || task.client}, ${formatPrice(task.price)}${deadlineInfo}, coluna: ${colName}. Use setas esquerda e direita para mover entre colunas, Enter ou Espaço para editar`);
+    el.setAttribute('aria-label', `Chegada ${task.pet_name || task.client}, ${formatPrice(task.price)}${deadlineInfo}, coluna: ${colName}. Use setas esquerda e direita para mover entre colunas, Enter ou Espaço para editar`);
   if (isExpanded) {
     el.classList.add('card-expanded');
   }
@@ -412,7 +412,7 @@ function handleSortableEnd(evt) {
       renderBoard();
 
       const colName = COLUMNS_MAP.get(targetColId)?.name || 'Coluna';
-      NotificationManager.info(`Agendamento ${task.pet_name || task.client} movido para ${colName}`, 2000);
+      NotificationManager.info(`Chegada ${task.pet_name || task.client} movida para ${colName}`, 2000);
       AppState.log('Task moved successfully', { taskId, targetColId, insertIndex });
     })
     .catch((error) => {
@@ -461,7 +461,7 @@ function handleKeyboardMove(e, task, cardElement) {
 
       // Announce move to screen readers
       const colName = COLUMNS_MAP.get(newColId)?.name || 'Coluna';
-      NotificationManager.info(`Agendamento ${task.pet_name || task.client} movido para ${colName}`, 2000);
+      NotificationManager.info(`Chegada ${task.pet_name || task.client} movida para ${colName}`, 2000);
 
       // Focus the moved card
       setTimeout(() => {
@@ -473,11 +473,11 @@ function handleKeyboardMove(e, task, cardElement) {
     })
     .catch((error) => {
       console.error('[Keyboard Move] Error:', error);
-      NotificationManager.error('Erro ao mover agendamento. Tente novamente.');
+      NotificationManager.error('Erro ao mover chegada. Tente novamente.');
     });
 }
 
-function renderProjectsHeader() {
+function renderArrivalsHeader() {
   if (!DOM.headerInfo) return;
 
   const tasks = AppState.getTasks();
@@ -488,9 +488,8 @@ function renderProjectsHeader() {
     if (!searchTerm) return true;
     if (!t || !t.client) return false;
     const clientMatches = t.client.toLowerCase().includes(searchTerm);
-    const hasDomain = !!t.domain;
-    const domainMatches = hasDomain && t.domain.toLowerCase().includes(searchTerm);
-    return clientMatches || domainMatches;
+    const petMatches = t.pet_name && t.pet_name.toLowerCase().includes(searchTerm);
+    return clientMatches || petMatches;
   });
   const totalValue = filteredTasks.reduce((sum, t) => sum + (parseFloat(t.price) || 0), 0);
 
@@ -500,6 +499,10 @@ function renderProjectsHeader() {
       <span class="header-stat-value">${formatCurrency(totalValue)}</span>
     </div>
   `;
+}
+
+function renderProjectsHeader() {
+  renderArrivalsHeader();
 }
 
 function filterKanbanByStatus(columnId) {
