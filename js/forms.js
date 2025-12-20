@@ -1016,10 +1016,9 @@ function setupFormAutoSave() {
   formAutoSaveSetup = true;
 
   const formFields = [
-    DOM.formClient, DOM.formContact, DOM.formType, DOM.formStack,
-    DOM.formDomain, DOM.formDesc, DOM.formPrice, DOM.formPayment,
-    DOM.formDeadline, DOM.formHosting, DOM.formRecurring, DOM.formPublic,
-    DOM.formAssetsLink
+    DOM.formClient, DOM.formPetName, DOM.formContact, DOM.formType,
+    DOM.formDesc, DOM.formPrice, DOM.formPayment,
+    DOM.formDeadline, DOM.formPublic, DOM.formAssetsLink
   ].filter(Boolean);
 
   formFields.forEach(field => {
