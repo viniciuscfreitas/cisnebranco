@@ -268,8 +268,8 @@ function createTasksRoutes(db, NODE_ENV, sanitizeString, io) {
       }
 
       const colIdNum = parseInt(col_id);
-      if (isNaN(colIdNum) || colIdNum < 0 || colIdNum > 3) {
-        return res.status(400).json({ success: false, error: 'col_id deve ser 0, 1, 2 ou 3' });
+      if (isNaN(colIdNum) || colIdNum < 0 || colIdNum > 4) {
+        return res.status(400).json({ success: false, error: 'col_id deve ser 0, 1, 2, 3 ou 4' });
       }
 
       const orderNum = (order_position !== undefined && order_position !== null)
@@ -835,8 +835,8 @@ function createTasksRoutes(db, NODE_ENV, sanitizeString, io) {
       const { col_id, order_position } = req.body;
 
       const colIdNum = parseInt(col_id);
-      if (isNaN(colIdNum) || colIdNum < 0 || colIdNum > 3) {
-        return res.status(400).json({ success: false, error: 'col_id deve ser 0, 1, 2 ou 3' });
+      if (isNaN(colIdNum) || colIdNum < 0 || colIdNum > 4) {
+        return res.status(400).json({ success: false, error: 'col_id deve ser 0, 1, 2, 3 ou 4' });
       }
 
       const orderNum = parseInt(order_position);
