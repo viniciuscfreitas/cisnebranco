@@ -380,7 +380,7 @@ function calculateStatusDistribution(tasks) {
 
   tasks.forEach(task => {
     const colId = task.col_id || 0;
-    if (colId >= 0 && colId <= 3) {
+    if (colId >= 0 && colId <= 4) {
       distribution[colId].count++;
       distribution[colId].value += parseFloat(task.price) || 0;
     }
@@ -466,7 +466,7 @@ async function generateRecentActivities(tasks, useCache = true) {
 
   tasks.forEach(task => {
     const colId = task.col_id || 0;
-    if (colId >= 0 && colId <= 3) {
+    if (colId >= 0 && colId <= 4) {
       tasksByStatus[colId].push(task);
     }
   });
