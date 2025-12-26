@@ -249,9 +249,9 @@ function generateHourSlots(includeClickable = false) {
 function renderCurrentTimeLine(isToday) {
   if (!isToday) return '';
   const now = new Date();
-      const totalMinutes = now.getHours() * 60 + now.getMinutes();
-      const topPercent = (totalMinutes * 100) / MINUTES_PER_DAY;
-      return `
+  const totalMinutes = now.getHours() * 60 + now.getMinutes();
+  const topPercent = (totalMinutes * 100) / MINUTES_PER_DAY;
+  return `
             <div class="calendar-current-time-line" style="top: ${topPercent}%;">
               <div class="calendar-current-time-dot"></div>
             </div>
@@ -263,16 +263,16 @@ function renderDayEvent(task) {
   if (!task || !task.id) return '';
 
   const taskDate = parseTaskDate(task);
-      if (!taskDate) return '';
+  if (!taskDate) return '';
 
-      const hour = taskDate.getHours();
-      const minutes = taskDate.getMinutes();
-      const totalMinutes = hour * 60 + minutes;
-      const top = (totalMinutes * 100) / MINUTES_PER_DAY;
+  const hour = taskDate.getHours();
+  const minutes = taskDate.getMinutes();
+  const totalMinutes = hour * 60 + minutes;
+  const top = (totalMinutes * 100) / MINUTES_PER_DAY;
   const duration = 60; // Default 1 hour
-      const heightPercent = Math.max((duration * 100) / MINUTES_PER_DAY, 4.17);
+  const heightPercent = Math.max((duration * 100) / MINUTES_PER_DAY, 4.17);
 
-      return `
+  return `
             <div class="calendar-day-event" 
                  data-task-id="${task.id}"
                  style="top: ${top}%; height: ${heightPercent}%;"
@@ -372,7 +372,7 @@ function renderWeekView(tasks) {
   const tasksByDate = new Map();
   const weekStartOnly = getDateOnly(weekStart);
   const weekEndOnly = getDateOnly(weekEnd);
-  
+
   tasks.forEach(task => {
     const taskDate = parseTaskDate(task);
     if (!taskDate) return;
@@ -683,9 +683,9 @@ function handleCalendarClick(e) {
     return;
   }
   if (target.dataset.action === 'today') {
-      currentCalendarDate = new Date();
-      renderAgendamentos();
-      renderAgendamentosHeader();
+    currentCalendarDate = new Date();
+    renderAgendamentos();
+    renderAgendamentosHeader();
     return;
   }
 
@@ -693,10 +693,10 @@ function handleCalendarClick(e) {
   if (target.dataset.view) {
     const view = target.dataset.view;
     if (['day', 'week', 'month', 'year'].includes(view)) {
-        calendarViewMode = view;
-        renderAgendamentos();
-        renderAgendamentosHeader();
-      }
+      calendarViewMode = view;
+      renderAgendamentos();
+      renderAgendamentosHeader();
+    }
     return;
   }
 
@@ -709,8 +709,8 @@ function handleCalendarClick(e) {
     const tasks = AppState.getTasks();
     const task = tasks.find(t => t.id === taskId);
     if (task && typeof openModal === 'function') {
-          openModal(task);
-        }
+      openModal(task);
+    }
     return;
   }
 
@@ -719,43 +719,43 @@ function handleCalendarClick(e) {
     if (target.closest('[data-task-id]')) return; // Don't create if clicking on event
 
     const dateStr = target.dataset.date;
-          const date = new Date(dateStr);
+    const date = new Date(dateStr);
     if (isNaN(date.getTime())) return; // Invalid date, bail out
 
-          if (calendarViewMode === 'year') {
-            calendarViewMode = 'month';
-            currentCalendarDate = date;
-            renderAgendamentos();
-            renderAgendamentosHeader();
+    if (calendarViewMode === 'year') {
+      calendarViewMode = 'month';
+      currentCalendarDate = date;
+      renderAgendamentos();
+      renderAgendamentosHeader();
     } else if (typeof openModal === 'function') {
-            const newTask = {
-              deadline: formatDateForForm(date),
-              deadline_timestamp: date.getTime()
-            };
-            openModal(newTask);
-          }
+      const newTask = {
+        deadline: formatDateForForm(date),
+        deadline_timestamp: date.getTime()
+      };
+      openModal(newTask);
+    }
     return;
   }
 
   // Time slot click (create new task at specific time)
   if (target.classList.contains('calendar-30min-slot')) {
-      e.stopPropagation();
+    e.stopPropagation();
     const hour = parseInt(target.dataset.hour, 10);
     const minute = parseInt(target.dataset.minute || 0, 10);
     const dayIdx = target.dataset.day;
 
-      let date;
-      if (dayIdx !== undefined) {
+    let date;
+    if (dayIdx !== undefined) {
       // Week view
-        const weekStart = getWeekStart(currentCalendarDate);
-        date = new Date(weekStart);
-        date.setDate(date.getDate() + parseInt(dayIdx, 10));
-      } else {
+      const weekStart = getWeekStart(currentCalendarDate);
+      date = new Date(weekStart);
+      date.setDate(date.getDate() + parseInt(dayIdx, 10));
+    } else {
       // Day view
-        date = new Date(currentCalendarDate);
-      }
+      date = new Date(currentCalendarDate);
+    }
 
-      date.setHours(hour, minute, 0, 0);
+    date.setHours(hour, minute, 0, 0);
 
     if (typeof openModal === 'function') {
       const newTask = {
@@ -810,30 +810,30 @@ function handleCalendarKeydown(e) {
 
   // Time slot
   if (target.classList.contains('calendar-30min-slot')) {
-        e.preventDefault();
-        e.stopPropagation();
+    e.preventDefault();
+    e.stopPropagation();
     const hour = parseInt(target.dataset.hour, 10);
     const minute = parseInt(target.dataset.minute || 0, 10);
     const dayIdx = target.dataset.day;
 
-        let date;
-        if (dayIdx !== undefined) {
-          const weekStart = getWeekStart(currentCalendarDate);
-          date = new Date(weekStart);
-          date.setDate(date.getDate() + parseInt(dayIdx, 10));
-        } else {
-          date = new Date(currentCalendarDate);
-        }
+    let date;
+    if (dayIdx !== undefined) {
+      const weekStart = getWeekStart(currentCalendarDate);
+      date = new Date(weekStart);
+      date.setDate(date.getDate() + parseInt(dayIdx, 10));
+    } else {
+      date = new Date(currentCalendarDate);
+    }
 
-        date.setHours(hour, minute, 0, 0);
+    date.setHours(hour, minute, 0, 0);
 
     if (typeof openModal === 'function') {
-        const newTask = {
-          deadline: formatDateForForm(date),
-          deadline_timestamp: date.getTime()
-        };
-        openModal(newTask);
-      }
+      const newTask = {
+        deadline: formatDateForForm(date),
+        deadline_timestamp: date.getTime()
+      };
+      openModal(newTask);
+    }
   }
 }
 
