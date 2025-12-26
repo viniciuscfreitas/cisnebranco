@@ -72,7 +72,7 @@ function parseDeadlineToDate(deadline, deadlineTimestampOrTask, useCache = true)
   // Support both old API (deadlineTimestamp as number) and new API (task object for caching)
   const task = typeof deadlineTimestampOrTask === 'object' && deadlineTimestampOrTask !== null ? deadlineTimestampOrTask : null;
   const deadlineTimestamp = task ? task.deadline_timestamp : deadlineTimestampOrTask;
-  
+
   // Use cached result if available and cache is enabled
   if (useCache && task && task._parsedDate) {
     return task._parsedDate;
@@ -115,11 +115,11 @@ function parseDeadlineToDate(deadline, deadlineTimestampOrTask, useCache = true)
 function getTasksForDate(tasks, date) {
   // Early return if no tasks
   if (!tasks || tasks.length === 0) return [];
-  
+
   const targetDate = date.getDate();
   const targetMonth = date.getMonth();
   const targetYear = date.getFullYear();
-  
+
   return tasks.filter(task => {
     // Pass task object for caching
     const taskDate = parseDeadlineToDate(task.deadline, task);
@@ -134,11 +134,11 @@ function getTasksForDate(tasks, date) {
 function getTasksForDateRange(tasks, startDate, endDate) {
   // Early return if no tasks
   if (!tasks || tasks.length === 0) return [];
-  
+
   // Pre-compute date boundaries once
   const startOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
   const endOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-  
+
   return tasks.filter(task => {
     // Pass task object for caching
     const taskDate = parseDeadlineToDate(task.deadline, task);
@@ -252,17 +252,17 @@ function renderDayView(tasks) {
           `;
     })() : ''}
         ${dayTasks.map(task => {
-          // Reuse cached parsed date
-          const taskDate = parseDeadlineToDate(task.deadline, task);
-          if (!taskDate) return '';
-          
-          const hour = taskDate.getHours();
-          const minutes = taskDate.getMinutes();
-          const totalMinutes = hour * 60 + minutes;
-          const top = (totalMinutes * 100) / MINUTES_PER_DAY;
-          const duration = 60;
-          const heightPercent = Math.max((duration * 100) / MINUTES_PER_DAY, 4.17);
-          return `
+      // Reuse cached parsed date
+      const taskDate = parseDeadlineToDate(task.deadline, task);
+      if (!taskDate) return '';
+
+      const hour = taskDate.getHours();
+      const minutes = taskDate.getMinutes();
+      const totalMinutes = hour * 60 + minutes;
+      const top = (totalMinutes * 100) / MINUTES_PER_DAY;
+      const duration = 60;
+      const heightPercent = Math.max((duration * 100) / MINUTES_PER_DAY, 4.17);
+      return `
             <div class="calendar-day-event" 
                  data-task-id="${task.id}"
                  style="top: ${top}%; height: ${heightPercent}%;"
@@ -274,7 +274,7 @@ function renderDayView(tasks) {
               <div class="calendar-day-event-subtitle">${escapeHtml(task.client)}</div>
             </div>
           `;
-        }).join('')}
+    }).join('')}
       </div>
     </div>
   `;
@@ -371,17 +371,17 @@ function renderWeekView(tasks) {
                 `;
       })() : ''}
               ${dayTasks.map(task => {
-                // Reuse cached parsed date
-                const taskDate = parseDeadlineToDate(task.deadline, task);
-                if (!taskDate) return '';
-                
-                const hour = taskDate.getHours();
-                const minutes = taskDate.getMinutes();
-                const totalMinutes = hour * 60 + minutes;
-                const top = (totalMinutes * 100) / MINUTES_PER_DAY;
-                const duration = 60;
-                const heightPercent = Math.max((duration * 100) / MINUTES_PER_DAY, 4.17);
-                return `
+        // Reuse cached parsed date
+        const taskDate = parseDeadlineToDate(task.deadline, task);
+        if (!taskDate) return '';
+
+        const hour = taskDate.getHours();
+        const minutes = taskDate.getMinutes();
+        const totalMinutes = hour * 60 + minutes;
+        const top = (totalMinutes * 100) / MINUTES_PER_DAY;
+        const duration = 60;
+        const heightPercent = Math.max((duration * 100) / MINUTES_PER_DAY, 4.17);
+        return `
                   <div class="calendar-week-event" 
                        data-task-id="${task.id}"
                        style="top: ${top}%; height: ${heightPercent}%;"
@@ -392,7 +392,7 @@ function renderWeekView(tasks) {
                     <div class="calendar-week-event-title">${escapeHtml(task.pet_name || task.client)}</div>
                   </div>
                 `;
-              }).join('')}
+      }).join('')}
             </div>
           `;
   }).join('')}

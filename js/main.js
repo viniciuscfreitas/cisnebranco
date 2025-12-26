@@ -900,7 +900,23 @@ function updateHeader(view) {
   } else if (view === 'agendamentos') {
     renderAgendamentosHeader();
     renderAgendamentos();
-    if (DOM.btnNewProject) DOM.btnNewProject.style.display = 'flex';
+    if (DOM.btnNewProject) {
+      DOM.btnNewProject.style.display = 'flex';
+      const icon = DOM.btnNewProject.querySelector('i');
+      if (icon) {
+        const textNode = Array.from(DOM.btnNewProject.childNodes).find(node => 
+          node.nodeType === Node.TEXT_NODE && node.textContent.trim()
+        );
+        if (textNode) {
+          textNode.textContent = ' Novo Agendamento';
+        } else {
+          DOM.btnNewProject.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i> Novo Agendamento';
+        }
+      } else {
+        DOM.btnNewProject.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i> Novo Agendamento';
+      }
+      DOM.btnNewProject.setAttribute('aria-label', 'Novo Agendamento (Ctrl+N)');
+    }
     if (DOM.searchContainer) DOM.searchContainer.style.display = 'flex';
     if (DOM.searchInput) {
       DOM.searchInput.placeholder = 'Buscar agendamento... (/)';
@@ -908,7 +924,23 @@ function updateHeader(view) {
     updateBottomNavCentralButton('agendamentos');
   } else {
     renderArrivalsHeader();
-    if (DOM.btnNewProject) DOM.btnNewProject.style.display = 'flex';
+    if (DOM.btnNewProject) {
+      DOM.btnNewProject.style.display = 'flex';
+      const icon = DOM.btnNewProject.querySelector('i');
+      if (icon) {
+        const textNode = Array.from(DOM.btnNewProject.childNodes).find(node => 
+          node.nodeType === Node.TEXT_NODE && node.textContent.trim()
+        );
+        if (textNode) {
+          textNode.textContent = ' Novo Check In';
+        } else {
+          DOM.btnNewProject.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i> Novo Check In';
+        }
+      } else {
+        DOM.btnNewProject.innerHTML = '<i class="fa-solid fa-plus" aria-hidden="true"></i> Novo Check In';
+      }
+      DOM.btnNewProject.setAttribute('aria-label', 'Novo Check In (Ctrl+N)');
+    }
     if (DOM.searchContainer) DOM.searchContainer.style.display = 'flex';
     if (DOM.searchInput) {
       DOM.searchInput.placeholder = 'Buscar chegada... (/)';

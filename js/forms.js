@@ -98,11 +98,106 @@ function resetFormToDefaults() {
   if (DOM.formPublic) DOM.formPublic.checked = false;
 }
 
+function safeParseDeadline(deadline, task) {
+  if (typeof parseDeadlineToDate !== 'function') return null;
+  return parseDeadlineToDate(deadline, task);
+}
+
+function safeFormatTime(date) {
+  if (typeof formatTime !== 'function' || !date) return '';
+  return formatTime(date);
+}
+
+function getScheduledPets() {
+  const tasks = AppState.getTasks();
+  const now = Date.now();
+  
+  if (typeof parseDeadlineToDate !== 'function') {
+    return [];
+  }
+  
+  const dayAgo = new Date(now - MS_PER_DAY);
+  const dayFromNow = new Date(now + MS_PER_DAY);
+  
+  // Parse dates once and keep them with tasks to avoid re-parsing in sort
+  const tasksWithDates = tasks.map(task => {
+    if (!task.deadline || task.deadline === DEADLINE_UNDEFINED) return null;
+    const taskDate = safeParseDeadline(task.deadline, task);
+    if (!taskDate) return null;
+    return { task, date: taskDate };
+  }).filter(item => {
+    if (!item) return false;
+    return item.date >= dayAgo && item.date <= dayFromNow;
+  });
+  
+  // Sort by date
+  tasksWithDates.sort((a, b) => a.date.getTime() - b.date.getTime());
+  
+  // Return only tasks
+  return tasksWithDates.map(item => item.task);
+}
+
+function populateScheduledPetsSelect() {
+  if (!DOM.scheduledPetSelect) return;
+  
+  const scheduledPets = getScheduledPets();
+  
+  // Use DocumentFragment to batch DOM operations and avoid multiple reflows
+  const fragment = document.createDocumentFragment();
+  const defaultOption = document.createElement('option');
+  defaultOption.value = '';
+  defaultOption.textContent = scheduledPets.length === 0 
+    ? 'Nenhum pet agendado encontrado' 
+    : 'Selecione um pet agendado...';
+  fragment.appendChild(defaultOption);
+  
+  // Build all options in memory first
+  scheduledPets.forEach(pet => {
+    const taskDate = safeParseDeadline(pet.deadline, pet);
+    const dateStr = safeFormatTime(taskDate) || (pet.deadline || '');
+    const option = document.createElement('option');
+    option.value = pet.id;
+    option.textContent = `${pet.pet_name || pet.client} - ${dateStr}`;
+    
+    // Store only necessary fields to avoid serialization issues
+    try {
+      option.dataset.task = JSON.stringify({
+        id: pet.id,
+        client: pet.client || '',
+        pet_name: pet.pet_name || '',
+        contact: pet.contact || '',
+        type: pet.type || 'Banho',
+        description: pet.description || '',
+        price: pet.price || '',
+        payment_status: pet.payment_status || PAYMENT_STATUS_PENDING
+      });
+    } catch (e) {
+      console.error('[Check-in] Error serializing pet data:', e);
+      option.dataset.petId = pet.id;
+    }
+    
+    fragment.appendChild(option);
+  });
+  
+  // Single DOM update instead of multiple innerHTML/appendChild calls
+  DOM.scheduledPetSelect.innerHTML = '';
+  DOM.scheduledPetSelect.appendChild(fragment);
+}
+
 function openModal(task = null) {
   if (!DOM.modalOverlay || !DOM.modalTitle || !DOM.btnDelete) return;
 
   const isEditingExistingTask = !!task;
+  const isCheckinMode = !isEditingExistingTask && 
+    DOM.boardContainer && 
+    DOM.boardContainer.classList.contains('active');
+  
+  if (isCheckinMode && !DOM.checkinSection) {
+    console.warn('[Check-in] Check-in section not found in DOM');
+  }
+  
   AppState.currentTaskId = isEditingExistingTask && task?.id ? task.id : null;
+  AppState.isCheckinMode = isCheckinMode;
   clearFormErrors();
 
   const currentPath = window.location.pathname;
@@ -118,9 +213,11 @@ function openModal(task = null) {
     window.history.pushState({ view: 'projects', taskId: task?.id || 'new' }, '', newPath);
   }
 
-  const modalTitle = isEditingExistingTask
-    ? `Editar: ${task?.client || (task?.id ? `OS #${task.id}` : 'Projeto')}`
-    : 'Novo Projeto';
+  const modalTitle = isCheckinMode
+    ? 'Novo Check In'
+    : (isEditingExistingTask
+      ? `Editar: ${task?.client || (task?.id ? `OS #${task.id}` : 'Projeto')}`
+      : 'Novo Projeto');
   const pdfButtonDisplay = isEditingExistingTask ? 'block' : 'none';
 
   DOM.modalTitle.innerText = modalTitle;
@@ -142,6 +239,12 @@ function openModal(task = null) {
 
   DOM.modalOverlay.setAttribute('aria-hidden', 'false');
   DOM.modalOverlay.classList.add('open');
+
+  if (isCheckinMode && DOM.checkinSection && DOM.checkinMode && DOM.scheduledPetSelect) {
+    setupCheckinMode();
+  } else if (DOM.checkinSection) {
+    DOM.checkinSection.classList.add('hidden');
+  }
 
   if (isEditingExistingTask) {
     DOM.formClient.value = task?.client || '';
@@ -266,6 +369,86 @@ function openModal(task = null) {
   AppState.log('Modal opened', { isEditingExistingTask, taskId: AppState.currentTaskId });
 }
 
+function setupCheckinMode() {
+  if (!DOM.checkinSection || !DOM.checkinMode || !DOM.scheduledPetSelect || !DOM.scheduledPetGroup) return;
+  
+  DOM.checkinSection.classList.remove('hidden');
+  
+  const showScheduledGroup = DOM.checkinMode.value === 'scheduled';
+  DOM.scheduledPetGroup.style.display = showScheduledGroup ? 'block' : 'none';
+  
+  const handleCheckinModeChange = () => {
+    const isScheduled = DOM.checkinMode.value === 'scheduled';
+    DOM.scheduledPetGroup.style.display = isScheduled ? 'block' : 'none';
+    if (isScheduled) {
+      populateScheduledPetsSelect();
+    } else {
+      resetFormToDefaults();
+    }
+  };
+  
+  const handlePetSelection = () => {
+    const selectedOption = DOM.scheduledPetSelect.options[DOM.scheduledPetSelect.selectedIndex];
+    if (!selectedOption || !selectedOption.value) return;
+    
+    try {
+      const taskData = selectedOption.dataset.task;
+      if (!taskData && selectedOption.dataset.petId) {
+        // Fallback: buscar task completa do estado se dataset.task não existir
+        const tasks = AppState.getTasks();
+        const petTask = tasks.find(t => t.id === parseInt(selectedOption.dataset.petId, 10));
+        if (petTask) {
+          DOM.formClient.value = petTask.client || '';
+          DOM.formPetName.value = petTask.pet_name || '';
+          DOM.formContact.value = petTask.contact || '';
+          DOM.formType.value = petTask.type || 'Banho';
+          DOM.formDesc.value = petTask.description || '';
+          DOM.formPrice.value = petTask.price || '';
+          DOM.formPayment.value = petTask.payment_status || PAYMENT_STATUS_PENDING;
+          updateFormProgress();
+        } else {
+          NotificationManager.error('Pet não encontrado. Tente novamente.');
+        }
+        return;
+      }
+      
+      if (!taskData) {
+        console.warn('[Check-in] No task data in selected option');
+        return;
+      }
+      
+      const petTask = JSON.parse(taskData);
+      DOM.formClient.value = petTask.client || '';
+      DOM.formPetName.value = petTask.pet_name || '';
+      DOM.formContact.value = petTask.contact || '';
+      DOM.formType.value = petTask.type || 'Banho';
+      DOM.formDesc.value = petTask.description || '';
+      DOM.formPrice.value = petTask.price || '';
+      DOM.formPayment.value = petTask.payment_status || PAYMENT_STATUS_PENDING;
+      updateFormProgress();
+    } catch (e) {
+      console.error('[Check-in] Error parsing selected pet:', e, {
+        optionValue: selectedOption.value,
+        datasetTask: selectedOption.dataset.task,
+        datasetPetId: selectedOption.dataset.petId
+      });
+      NotificationManager.error('Erro ao carregar dados do pet. Tente novamente.');
+    }
+  };
+  
+  if (DOM.checkinMode._changeHandler) {
+    DOM.checkinMode.removeEventListener('change', DOM.checkinMode._changeHandler);
+  }
+  DOM.checkinMode._changeHandler = handleCheckinModeChange;
+  DOM.checkinMode.addEventListener('change', handleCheckinModeChange);
+  
+  if (DOM.scheduledPetSelect._changeHandler) {
+    DOM.scheduledPetSelect.removeEventListener('change', DOM.scheduledPetSelect._changeHandler);
+  }
+  DOM.scheduledPetSelect._changeHandler = handlePetSelection;
+  DOM.scheduledPetSelect.addEventListener('change', handlePetSelection);
+}
+
 function findFirstEmptyField() {
   const fields = [
     DOM.formClient,
@@ -294,6 +477,10 @@ function closeModal() {
   DOM.modalOverlay.setAttribute('aria-hidden', 'true');
   clearFormErrors();
   AppState.currentTaskId = null;
+  AppState.isCheckinMode = false;
+  if (DOM.checkinSection) {
+    DOM.checkinSection.classList.add('hidden');
+  }
   releaseFocusFromModal();
 
   const currentPath = window.location.pathname;
@@ -874,16 +1061,19 @@ async function saveForm() {
       closeModal();
     } else {
       // Create new task
-      const discoveryTasks = tasks.filter(t => t.col_id === DISCOVERY_COLUMN_ID);
-      const maxOrder = discoveryTasks.length > 0
-        ? Math.max(...discoveryTasks.map(t => t.order_position || 0))
+      // Check-in goes to column 1 (Aguardando), regular appointments go to column 0 (Não Chegaram)
+      const targetColId = AppState.isCheckinMode ? CHECKIN_COLUMN_ID : DISCOVERY_COLUMN_ID;
+      
+      const targetColTasks = tasks.filter(t => t.col_id === targetColId);
+      const maxOrder = targetColTasks.length > 0
+        ? Math.max(...targetColTasks.map(t => t.order_position || 0))
         : -1;
       const newOrder = maxOrder + 1;
 
       const hours = parseDeadlineHours(formData.deadline);
       const deadline_timestamp = hours ? Date.now() : null;
 
-      formData.col_id = DISCOVERY_COLUMN_ID;
+      formData.col_id = targetColId;
       formData.order_position = newOrder;
       formData.deadline_timestamp = deadline_timestamp;
 
@@ -896,11 +1086,12 @@ async function saveForm() {
 
       const updatedTasks = [...tasks, normalizedNewTask];
       AppState.setTasks(updatedTasks);
-      AppState.log('Task created', { taskId: normalizedNewTask.id });
+      AppState.log('Task created', { taskId: normalizedNewTask.id, isCheckin: AppState.isCheckinMode });
 
       clearFormDraft();
       clearFormErrors();
       AppState.currentTaskId = null;
+      AppState.isCheckinMode = false;
       closeModal();
     }
 

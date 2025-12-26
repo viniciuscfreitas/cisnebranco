@@ -393,6 +393,22 @@
           <div class="form-progress" id="formProgress" role="status" aria-live="polite">
             <span id="formProgressText">2 de 3 campos obrigatórios preenchidos</span>
           </div>
+          <div id="checkinSection" class="checkin-section hidden">
+            <h3 class="form-section-title">Check In</h3>
+            <div class="form-group">
+              <label for="checkinMode">Tipo de Check In</label>
+              <select class="form-input" id="checkinMode" aria-label="Tipo de check in">
+                <option value="scheduled">Pet Agendado</option>
+                <option value="walkin">Chegada sem Agendamento</option>
+              </select>
+            </div>
+            <div class="form-group" id="scheduledPetGroup">
+              <label for="scheduledPetSelect">Selecione o Pet Agendado</label>
+              <select class="form-input" id="scheduledPetSelect" aria-label="Pet agendado">
+                <option value="">Carregando...</option>
+              </select>
+            </div>
+          </div>
           <div>
             <h3 class="form-section-title">Informações Básicas</h3>
             <div class="form-grid">

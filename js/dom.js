@@ -37,6 +37,10 @@ const DOM = {
   formAdvancedContent: null,
   modalEditBadge: null,
   modalPreview: null,
+  checkinSection: null,
+  checkinMode: null,
+  scheduledPetSelect: null,
+  scheduledPetGroup: null,
   statTotalValue: null,
   navButtons: null,
   statsGrid: null,
@@ -128,6 +132,10 @@ const DOM = {
     this.formAdvancedContent = document.getElementById('formAdvancedContent');
     this.modalEditBadge = document.getElementById('modalEditBadge');
     this.modalPreview = document.getElementById('modalPreview');
+    this.checkinSection = document.getElementById('checkinSection');
+    this.checkinMode = document.getElementById('checkinMode');
+    this.scheduledPetSelect = document.getElementById('scheduledPetSelect');
+    this.scheduledPetGroup = document.getElementById('scheduledPetGroup');
     this.statTotalValue = document.getElementById('statTotalValue');
     this.navButtons = document.querySelectorAll('.nav-btn');
     this.statsGrid = document.getElementById('statsGrid');

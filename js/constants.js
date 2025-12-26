@@ -68,3 +68,6 @@ const COLUMNS = [
   { id: 3, name: 'Serviço Concluído' }, // Pets que terminaram, aguardando entrega
   { id: 4, name: 'Entregue' } // Pets já entregues ao tutor
 ];
+
+// Check-in column ID
+const CHECKIN_COLUMN_ID = 1; // Aguardando
